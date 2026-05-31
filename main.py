@@ -1,3 +1,4 @@
+# main.py
 from fastapi import FastAPI, Header, HTTPException, Depends
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
@@ -19,13 +20,14 @@ pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
 def get_db():
     try:
         return psycopg2.connect(
-            dbname=os.getenv("DB_NAME", "yellow_ai"),
-            user=os.getenv("DB_USER", "yellow"),
-            password=os.getenv("DB_PASSWORD", ""),
-            host="localhost"
+            dbname=os.getenv("DB_NAME"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            host=os.getenv("DB_HOST"),
+            port=os.getenv("DB_PORT", "5432")
         )
-    except Exception:
-        raise HTTPException(status_code=500, detail="DB connection failed")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DB connection failed: {str(e)}")
 
 # ====== Token ======
 def verify_token(authorization: str = Header(None)):
@@ -151,4 +153,3 @@ def chat(req: ChatRequest, user=Depends(verify_token)):
 def ui():
     with open("templates/index.html", encoding="utf-8") as f:
         return f.read()
-
